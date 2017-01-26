@@ -1,0 +1,117 @@
+---
+title: "HW1"
+author: "Daniel Pontoh"
+date: "January 22, 2017"
+output: html_document
+---
+```{r q0, warning=FALSE, message=FALSE}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+
+#standard read
+#URL <- "https://data.bls.gov/timeseries/LNU04000000?years_option=all_years&periods_optio#n=specific_periods&periods=Annual+Data"
+#fil <- basename(URL)
+#fil <- file.path("data", fil)
+#
+#if (!file.exist(fil)) download.file(URL, fil)
+```
+####The data was not able to easily download. Go to link above and manually download the .xlsx 
+
+# Question 1
+#####Is the current (as close to present as possible with the data) national unemployment rate going up, down or holding steady?
+```{r q1, warning=FALSE, message=FALSE}
+unemp <- read_excel("data/SeriesReport-20170122150353_c71d1e.xlsx", skip=10, col_names=TRUE)
+unemp <- mutate(unemp, Year=as.Date(sprintf("%d-01-01", as.integer(Year))))
+```
+
+#####Trend line for all entire time period of the sample:
+
+```{r q1a, warning=FALSE, message=FALSE}
+ggplot(unemp, aes(Year, Annual)) +
+  geom_line(aes(group=1)) +
+  geom_point() +
+  stat_smooth() +
+  scale_x_date(date_breaks="10 years", date_labels="%Y")
+```
+
+#####Trend line for he past 10 years:
+
+```{r q1b, warning=FALSE, message=FALSE}
+
+unemp08on <- filter(unemp, Year > as.character.Date("2007-01-01"))
+
+ggplot(unemp08on, aes(Year, Annual)) +
+   geom_line(aes(group=1)) +
+   geom_point() +
+   stat_smooth() +
+   scale_x_date(date_breaks="2 years", date_labels="%Y")
+```
+
+
+# Question 2
+######What was the mean unemployment rate for New Jersey by complete decade?
+```{r q2, warning=FALSE, message=FALSE}
+# New Jersey Mean Unemployment Rate 2006-15 --------
+
+unemp <- read_excel("data/staadata.xlsx")
+
+unemp <- unemp[8:nrow(unemp),c(2,3,10)]
+colnames(unemp) <- c("State","Year", "Rate")
+
+unemp$Rate <- as.numeric(unemp$Rate)
+
+unemp05 <- unemp[unemp$Year > 2005,]
+njunemp <- unemp05[unemp05$State == "New Jersey",]
+a <- mean(njunemp$Rate)
+a
+```
+#####New Jersey's mean unemployment rate for the past decade was 7.2%
+
+# Question 3
+######How does the mean unemployment rate for New Jersey by complete decade compare to the mean unemployment rate by complete decade for for Wyoming?
+```{r q3}
+# NJ vs WY Mean Unemployment Rate 2006-15 --------
+
+
+wyunemp <- unemp05[unemp05$State == "Wyoming",]
+mean(wyunemp$Rate)
+
+mean(njunemp$Rate) - mean(wyunemp$Rate)
+
+```
+
+#####New Jersey's Mean Unemployment Rate for years 2006-15 is 2.61 percentage points greater than Wyoming's for that period of time.
+
+# Question 4
+######Which state(s) — could be ties — have the lowest (most current) unemployment rate?
+
+```{r q4}
+# State(s) w/ current lowest unemployment rate ----------------------------
+
+unemp15 <- unemp05[unemp05$Year == "2015",]
+unemp15[order(unemp15$Rate),] %>%
+  head()
+
+unemp15[which(unemp15$Rate == min(unemp15$Rate)),]
+
+
+```
+
+#####North Dakota had the lowest unemployment rate in 2015.
+
+# Question 5
+######Which states(s) — could be ties — had the lowest unemployment unemployment rate in 2008?
+```{r q5}
+# State(s) w/ lowest unemployment rate in 2008 ----------------------------
+
+unemp08 <- unemp05[unemp05$Year == "2008",]
+unemp08[order(unemp08$Rate),] %>%
+  head() 
+
+unemp08[which(unemp08$Rate == min(unemp08$Rate)),]
+
+```
+#####South Dakota and Wyoming were tied for lowest unemployment rate in 2008.
